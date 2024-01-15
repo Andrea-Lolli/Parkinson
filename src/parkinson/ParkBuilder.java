@@ -19,6 +19,7 @@ import repast.simphony.space.continuous.RandomCartesianAdder;
 import repast.simphony.space.graph.Network;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridBuilderParameters;
+import repast.simphony.space.grid.GridPoint;
 import repast.simphony.space.grid.SimpleGridAdder;
 import repast.simphony.space.grid.WrapAroundBorders;
 
@@ -56,7 +57,7 @@ public class ParkBuilder implements ContextBuilder<Object> {
 		int neuronDcount = 240;
 		int microgliaCount = 40;
 		int astrociteCount = 40;
-		int citochineCount = 40;
+		int citochineCount = 40; //no
 		
 		for(int i = 0; i < neuronCcount; i++) {
 			context.add(new NeuroneMotorio(space, grid, network));
@@ -68,15 +69,12 @@ public class ParkBuilder implements ContextBuilder<Object> {
 		}
 
 		for(int i = 0; i < astrociteCount; i++) {
-			context.add(new Astrocita(space, grid));
+			//context.add(new Astrocita(space, grid));
 		}
 		
-		for(int i = 0; i < citochineCount; i++) {
-			context.add(new Citochina(space, grid));
-		}
 		
 		for(int i = 0; i < microgliaCount; i++) {
-			context.add(new Microglia(space, grid));
+			//context.add(new Microglia(space, grid));
 		}
 
 		

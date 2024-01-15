@@ -4,6 +4,7 @@ import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
+import repast.simphony.util.ContextUtils;
 
 public class StressSign {
 		
@@ -14,26 +15,52 @@ public class StressSign {
 	
 	private double angolo;
 	private boolean moved = false;
+	private int stepNumber = 0;
 	
-	public StressSign (ContinuousSpace<Object> space, Grid<Object> grid, GridPoint pt ) {	
+	public StressSign (ContinuousSpace<Object> space, Grid<Object> grid, GridPoint pt, double angolo) {	
 		this.space = space;
 		this.grid = grid;
 		this.startAt = pt;
-		this.space.moveTo(this, startAt.getX(),startAt.getY());
-		this.grid.moveTo(this, startAt.getX(),startAt.getY());
-	}
-	
-	
-	@ScheduledMethod(interval=1)
-	public void move(double angolo) {
 		this.angolo = angolo;
-		this.moved = true;
-		// muovo l'oggetto sempre lungo lo stesso angolo
-		this.space.moveByVector(this,1 , Math.toRadians(this.angolo), 0);
-		this.grid.moveByVector(this ,1,Math.toRadians(this.angolo) ,0);
-		
+	}	
+	
+	public void build() {
+		this.space.moveTo(this, startAt.getX(), startAt.getY());
+		this.grid.moveTo(this, startAt.getX(), startAt.getY());
 	}
 	
-	
+	@ScheduledMethod(start = 1, interval=1)
+	public void move() {
+		if(stepNumber == 5) {
+			ContextUtils.getContext(this).remove(this);
+			return;
+		}
 		
+		this.moved = true;
+		this.stepNumber++;
+		int newX = startAt.getX() + getValueX();
+		int newY = startAt.getY() + getValueY();
+		
+		this.space.moveTo(this, newX, newY);
+		this.grid.moveTo(this, newX, newY);
+		// muovo l'oggetto sempre lungo lo stesso angolo
+		this.startAt = new GridPoint(newX, newY);
+	}
+	
+	private int getValueX() {
+		if(angolo == 0 || angolo == 45 || angolo == 315)
+			return 1;
+		if(angolo == 90 || angolo == 270)
+			return 0;
+		return -1;
+	}
+	
+	private int getValueY() {
+		if(angolo == 45 || angolo == 90 || angolo == 135)
+			return 1;
+		if(angolo == 0 || angolo == 180)
+			return 0;
+		return -1;
+	}
+			
 }
