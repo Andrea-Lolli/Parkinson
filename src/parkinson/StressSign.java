@@ -14,8 +14,9 @@ public class StressSign {
 	private GridPoint startAt;
 	
 	private double angolo;
-	private boolean moved = false;
+	public boolean moved = false;
 	private int stepNumber = 0;
+	private boolean settedUp = false;
 	
 	public StressSign (ContinuousSpace<Object> space, Grid<Object> grid, GridPoint pt, double angolo) {	
 		this.space = space;
@@ -27,16 +28,27 @@ public class StressSign {
 	public void build() {
 		this.space.moveTo(this, startAt.getX(), startAt.getY());
 		this.grid.moveTo(this, startAt.getX(), startAt.getY());
+		settedUp = true;
 	}
 	
-	@ScheduledMethod(start = 1, interval=1)
+	public GridPoint getPosition() {
+		return startAt;
+	}
+	
+	@ScheduledMethod(start = 2, interval=1)
 	public void move() {
+		if(!settedUp)
+			return;
+		
 		if(stepNumber == 5) {
-			ContextUtils.getContext(this).remove(this);
+			try {
+				ContextUtils.getContext(this).remove(this);
+			} catch(Exception e) {
+				System.out.println("aaaaaaaa" + e.getMessage());
+			}
 			return;
 		}
 		
-		this.moved = true;
 		this.stepNumber++;
 		int newX = startAt.getX() + getValueX();
 		int newY = startAt.getY() + getValueY();
@@ -45,6 +57,7 @@ public class StressSign {
 		this.grid.moveTo(this, newX, newY);
 		// muovo l'oggetto sempre lungo lo stesso angolo
 		this.startAt = new GridPoint(newX, newY);
+		this.moved = true;
 	}
 	
 	private int getValueX() {

@@ -38,46 +38,41 @@ public class Astrocita {
 	}
 	
 	
-	// equilibrio |Astrociti| = |Microglia|
-	@ScheduledMethod(start = 1, interval=1)
-	public void modulazione() {
-		if(stato == StatoInterno.attivo) {
-		for (int i = 0; i < 8; i++) {
-			MolMod mm = new MolMod(this.space, this.grid, this.pt );
-			ContextUtils.getContext(this).add(mm);
-			mm.move(i*45);		
-		}
-		}		
-	}
+//	// equilibrio |Astrociti| = |Microglia|
+//	@ScheduledMethod(start = 1, interval=1)
+//	public void modulazione() {
+//		if(stato == StatoInterno.attivo) {
+//			for (int i = 0; i < 8; i++) {
+//				MolMod mm = new MolMod(this.space, this.grid, this.pt );
+//				ContextUtils.getContext(this).add(mm);
+//				mm.move(i*45);		
+//			}
+//		}		
+//	}
 	
-	@Watch ( watcheeClassName = "parkinson.Citochina" ,
-			 watcheeFieldNames = " moved " ,
-			 query = " within_moore 1 " ,
-			 whenToTrigger = WatcherTriggerSchedule . IMMEDIATE )
-	public void checkCito() {
-		
-		GridCellNgh<Citochina> n = new GridCellNgh<>(this.grid, this.pt, Citochina.class, 1,1);
-		List<GridCell<Citochina>> nn = n.getNeighborhood(true);
-		Context<Object> context = ContextUtils.getContext(true);
-		if (!nn.isEmpty()) {
-			for (GridCell obj : nn) {
-				Iterable<Citochina> c = obj.items();
-				for (Iterator iterator = c.iterator(); iterator.hasNext();) {
-					contaCito++;
-					context.remove(iterator.next());
-				}
-			}
-		}
-		if(contaCito > 0) {
-			stato=StatoInterno.attivo;
-			contaCito = 0;
-		}else {
-			stato=StatoInterno.inattivo;
-		}
-	}
-
-
-		
-	
-
+//	@Watch ( watcheeClassName = "parkinson.Citochina" ,
+//			 watcheeFieldNames = "moved" ,
+//			 query = "within_moore 1" ,
+//			 whenToTrigger = WatcherTriggerSchedule.LATER )
+//	public void checkCito() {
+//		
+//		GridCellNgh<Citochina> n = new GridCellNgh<>(this.grid, this.pt, Citochina.class, 1,1);
+//		List<GridCell<Citochina>> nn = n.getNeighborhood(true);
+//		Context<Object> context = ContextUtils.getContext(true);
+//		if (!nn.isEmpty()) {
+//			for (GridCell obj : nn) {
+//				Iterable<Citochina> c = obj.items();
+//				for (Iterator iterator = c.iterator(); iterator.hasNext();) {
+//					contaCito++;
+//					context.remove(iterator.next());
+//				}
+//			}
+//		}
+//		if(contaCito > 0) {
+//			stato=StatoInterno.attivo;
+//			contaCito = 0;
+//		}else {
+//			stato=StatoInterno.inattivo;
+//		}
+//	}
 }

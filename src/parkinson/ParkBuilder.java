@@ -19,30 +19,34 @@ import repast.simphony.space.continuous.RandomCartesianAdder;
 import repast.simphony.space.graph.Network;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridBuilderParameters;
-import repast.simphony.space.grid.GridPoint;
 import repast.simphony.space.grid.SimpleGridAdder;
 import repast.simphony.space.grid.WrapAroundBorders;
 
 public class ParkBuilder implements ContextBuilder<Object> {
-
+	
+	// Parametri simulazione
 	// Dimensioni ambiente
 	private int dimX = 100;
 	private int dimY = 100;
+	//Numero agenti
+	private int neuronCcount = 240;
+	private int neuronDcount = 240;
+	private int microgliaCount = 100;
+	private int astrociteCount = 100;
+	// Distanza agenti
+	private int connectionDistance = 9; // per network neuroni
+	private int neuronMaxDistance = 3;
+	private int agentMaxDistance = 3;
 	
 	@Override
 	public Context build(Context<Object> context) {
-
 		context.setId("Parkinson");
-		
-//		//Network vecchia
-//		NetworkBuilder<Object> netBuilder = new NetworkBuilder<Object>("network", context, true);
-//		netBuilder.buildNetwork();
 		
 		// Crea network
         NetworkFactory netFactory = NetworkFactoryFinder.createNetworkFactory(null);
-        Network<Object> network = netFactory.createNetwork("network", context, true);
-        NetworkBuilder<Object> netBuilder = new NetworkBuilder<Object>("network", context, true);
-        //netBuilder.buildNetwork(); // non so perchè questo non serve boh...
+        Network<Object> network = netFactory.createNetwork("network", context, true);  
+        // Crea network morta
+        Network<Object> deadNetwork = netFactory.createNetwork("deadNetwork", context, true);
 		
 		// crea spazio continuo
 		ContinuousSpaceFactory spaceFactory = ContinuousSpaceFactoryFinder.createContinuousSpaceFactory(null);
@@ -51,54 +55,48 @@ public class ParkBuilder implements ContextBuilder<Object> {
 		// Crea griglia
 		GridFactory gridFactory = GridFactoryFinder.createGridFactory(null);	
 		Grid<Object> grid = gridFactory.createGrid("grid", context, new GridBuilderParameters<Object>(new WrapAroundBorders(), new SimpleGridAdder<Object>(), false, dimX, dimY));
-		
-		// Aggiungi gli agenti
-		int neuronCcount = 240;
-		int neuronDcount = 240;
-		int microgliaCount = 40;
-		int astrociteCount = 40;
-		int citochineCount = 40; //no
-		
 		for(int i = 0; i < neuronCcount; i++) {
-			context.add(new NeuroneMotorio(space, grid, network));
+			context.add(new NeuroneMotorio(space, grid, network, deadNetwork));
 		}
 		
+		
 		for(int i = 0; i < neuronDcount; i++) {
-			NDp neuron = new NDp(space, grid, network);
+			NDp neuron = new NDp(space, grid, network, deadNetwork);
 			context.add(neuron);
 		}
 
 		for(int i = 0; i < astrociteCount; i++) {
-			//context.add(new Astrocita(space, grid));
+			context.add(new Astrocita(space, grid));
 		}
 		
 		
 		for(int i = 0; i < microgliaCount; i++) {
-			//context.add(new Microglia(space, grid));
+			context.add(new Microglia(space, grid));
 		}
 
 		
 		// Calcolo posizioni ambiente
-        double[][] neuronPoints = generatePoints(480, dimX, 3);
-        double[][] otherAgentsPoints = generatePoints(120, dimX, 3);
+        double[][] neuronPoints = generatePoints(neuronDcount + neuronCcount, dimX-2, neuronMaxDistance);
+        double[][] otherAgentsPoints = generatePoints(microgliaCount + astrociteCount, dimX-2, agentMaxDistance);
+        
         int neuronCount = 0;
         int agentCount = 0;
         
         // Posiziona agenti
 		for(Object obj : context) {
 			if(isNeuron(obj)) {
-				grid.moveTo(obj, (int) neuronPoints[neuronCount][0], (int) neuronPoints[neuronCount][1]);
-				space.moveTo(obj, neuronPoints[neuronCount][0], neuronPoints[neuronCount][1]);
+				grid.moveTo(obj, (int) neuronPoints[neuronCount][0]+1, (int) neuronPoints[neuronCount][1]+1);
+				space.moveTo(obj, neuronPoints[neuronCount][0]+1, neuronPoints[neuronCount][1]+1);
 				neuronCount++;
 			} else {
-				grid.moveTo(obj, (int) otherAgentsPoints[agentCount][0], (int) otherAgentsPoints[agentCount][1]);
-				space.moveTo(obj, otherAgentsPoints[agentCount][0], otherAgentsPoints[agentCount][1]);
+				grid.moveTo(obj, (int) otherAgentsPoints[agentCount][0]+1, (int) otherAgentsPoints[agentCount][1]+1);
+				space.moveTo(obj, otherAgentsPoints[agentCount][0]+1, otherAgentsPoints[agentCount][1]+1);
 				agentCount++;
 			}
 		}
 		
 		// Genera connessioni fra neuroni
-		List<int[]> connections = findConnections(neuronPoints, 9);
+		List<int[]> connections = findConnections(neuronPoints, connectionDistance);
 		List<Object> neurons = new ArrayList<>();
 
 		for(Object obj : context) { 

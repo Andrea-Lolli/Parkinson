@@ -16,6 +16,7 @@ import repast.simphony.random.RandomHelper;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.graph.Network;
+import repast.simphony.space.graph.RepastEdge;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
 import repast.simphony.util.ContextUtils;
@@ -23,7 +24,13 @@ import repast.simphony.util.SimUtilities;
 import repast.simphony.query.space.grid.GridCell;
 
 public class NDp {
-
+	
+	// Parametri simulazione neurone
+	private int nAlfaAccumulo = 4;
+	private int nAlfaMalato = 12;
+	private int probAccumuloAlfa = 5; // (1/probAccumuloAlfa) = probabilità di incrementare alfasinucleina interna
+	private int probRilascio = 5; // (1/proRilascio) = probabilità di generare agenti in ognuna delle direzioni
+	
 	public enum StatoInterno{
 		produzione, accumulo, malato;
 	}
@@ -31,6 +38,7 @@ public class NDp {
 	private ContinuousSpace<Object> space;
 	private Grid<Object> grid;
 	private Network<Object> network;
+	private Network<Object> deadNetwork;
 
 	// descrive lo stato interno.
 	private StatoInterno stato;
@@ -41,34 +49,15 @@ public class NDp {
 	// contro le citochine
 	private int resistenza;
 
-	public NDp (ContinuousSpace<Object> space, Grid<Object> grid, Network<Object> network) {
+	public NDp (ContinuousSpace<Object> space, Grid<Object> grid, Network<Object> network, Network<Object> deadNetwork) {
 		this.space = space;
 		this.grid = grid;
 		this.stato = StatoInterno.produzione;
 		this.contaAlfa = 0;
 		this.network = network;
 		this.stato = StatoInterno.produzione;
+		this.deadNetwork = deadNetwork;
 	}
-
-//	public void autoBind(Context context) {
-//
-//		if(context == (null)) {
-//			return;
-//		}
-//
-//		GridPoint pt = grid.getLocation(this);
-//
-//		GridCellNgh<NDp> nghCellNgh = new GridCellNgh<>(grid, pt, NDp.class, 10, 10);
-//
-//		List<GridCell<NDp>> gridCells = nghCellNgh.getNeighborhood(true);
-//
-//		for(GridCell<NDp> cell : gridCells) {
-//			if(cell.size() == 0)
-//				break;
-//			System.out.print("found edge" + "\n");
-//			cell.items().forEach( neuron -> network.addEdge(this, neuron));
-//		}
-//	}
 
 	public float getColorR() {
 		if(stato == StatoInterno.accumulo) 
@@ -107,8 +96,7 @@ public class NDp {
 	 * Ogni tick c'è la probabilità di creare alfa-sin.
 	 */
 	@ScheduledMethod(start = 1, interval = 1, priority = 1)
-	public void dopRelease() {		
-		
+	public void dopRelease() {			
 		//flag controllo stato
 		if(this.stato == StatoInterno.produzione || this.stato==StatoInterno.accumulo) {
 
@@ -120,7 +108,6 @@ public class NDp {
 					((NeuroneMotorio)neighbor).addDop();
 				}
 			}
-
 		}
 	}
 
@@ -130,9 +117,9 @@ public class NDp {
 	 */
 	@ScheduledMethod(start = 1, interval = 2, priority = 1)
 	public void accumulo() {
-		if(stato != StatoInterno.malato && new Random().nextInt(3)< 1) {
+		if(stato != StatoInterno.malato && new Random().nextInt(probAccumuloAlfa)< 1) {
 			this.contaAlfa ++;
-			if(this.contaAlfa>=3) {
+			if(this.contaAlfa >= nAlfaAccumulo) {
 				this.stato = StatoInterno.accumulo;
 			}
 		}		
@@ -146,10 +133,14 @@ public class NDp {
 		if(stato==StatoInterno.accumulo) {
 			GridPoint pt = grid.getLocation(this);
 			for (int i = 0; i < 8; i++) {
-				if(new Random().nextInt(5) < 1) {
-					StressSign ss = new StressSign(space, grid, pt, (double)i*45);
-					ContextUtils.getContext(this).add(ss);
-					ss.build();
+				if(new Random().nextInt(probRilascio) < 1 && pt != null) {
+					try {
+						StressSign ss = new StressSign(space, grid, pt, (double)i*45);
+						ContextUtils.getContext(this).add(ss);
+						ss.build();
+					} catch (Exception e) {
+						System.out.println(e.getMessage());
+					}	
 				}
 			}
 		}
@@ -163,23 +154,28 @@ public class NDp {
 		if(this.contaAlfa>=12 && stato==StatoInterno.accumulo) {	
 			GridPoint pt = grid.getLocation(this);
 			for (int i = 0; i < 8; i++) {
-				if(new Random().nextInt(5) < 1) {
-					Alfa alfa = new Alfa(this.space,this.grid, pt, i*45);
-					ContextUtils.getContext(this).add(alfa);
-					alfa.build();
+				if(new Random().nextInt(probRilascio) < 1 && pt != null) {
+					try {
+						Alfa alfa = new Alfa(this.space,this.grid, pt, i*45);
+						ContextUtils.getContext(this).add(alfa);
+						alfa.build();
+					} catch (Exception e) {
+						System.out.println(e.getMessage());
+					}
 				}
 			}
 			this.stato = StatoInterno.malato;
+			this.updateNetwork();
 		}
 	}
 
 
 //	/**
-//	 * Controlla se sono presenti tra le celle vicinec citochine
+//	 * Controlla se sono presenti tra le celle vicine citochine
 //	 */
-//	@Watch ( watcheeClassName = " parkinson.Citochina " ,
-//			watcheeFieldNames = " moved " ,
-//			query = " within_moore 1 " ,
+//	@Watch (watcheeClassName = "parkinson.Citochina",
+//			watcheeFieldNames = "moved",
+//			query = "within_moore 1",
 //			whenToTrigger = WatcherTriggerSchedule.IMMEDIATE )
 //	public void checkCito() {
 //
@@ -201,36 +197,58 @@ public class NDp {
 //			}
 //
 //		}
-//		if(resistenza > 7) {
+//		if(resistenza >= nAlfaMalato) {
 //			this.alfaRelease(); // sempre se è maggiore o uguale ad 8 altrimenti non rilascia
 //			resistenza = 0;
 //		}
 //
 //	}
 
-	@Watch ( watcheeClassName = " parkinson.Alfa " ,
-			watcheeFieldNames = " moved " ,
-			query = " within_moore 1 " ,
-			whenToTrigger = WatcherTriggerSchedule.IMMEDIATE )
-	public void checkExAlfa() {
-		GridPoint pt = grid.getLocation(this);
-		GridCellNgh<Alfa> n = new GridCellNgh<Alfa>(grid, pt, Alfa.class, 1,1);
-		List<GridCell<Alfa>> nn = n.getNeighborhood(true);
-		Context<Object> context = ContextUtils.getContext(true);
-		for (GridCell<Alfa> gridCell : nn) {
-			if(!gridCell.getPoint().equals(pt)) {
-				Iterable<Alfa> iter = gridCell.items();
-				for (Alfa a : iter) {
-					context.remove(a);
-					this.contaAlfa++;				
-				}
-				if(this.contaAlfa > 3) {		
-					stato = StatoInterno.accumulo;
-				}
-				if(this.contaAlfa>=12) {
-					this.alfaRelease();
-				}
-			}
-		}	
+//	@Watch (watcheeClassName = "parkinson.Alfa",
+//			watcheeFieldNames = "moved",
+//			query = "within_moore 1",
+//			whenToTrigger = WatcherTriggerSchedule.IMMEDIATE )
+//	public void checkExAlfa() {
+//		GridPoint pt = grid.getLocation(this);
+//		GridCellNgh<Alfa> n = new GridCellNgh<Alfa>(grid, pt, Alfa.class, 1,1);
+//		List<GridCell<Alfa>> nn = n.getNeighborhood(true);
+//		Context<Object> context = ContextUtils.getContext(true);
+//		for (GridCell<Alfa> gridCell : nn) {
+//			if(!gridCell.getPoint().equals(pt)) {
+//				Iterable<Alfa> iter = gridCell.items();
+//				for (Alfa a : iter) {
+//					context.remove(a);
+//					this.contaAlfa++;				
+//				}
+//				if(this.contaAlfa >= nAlfaAccumulo) {		
+//					stato = StatoInterno.accumulo;
+//				}
+//				if(this.contaAlfa>= nAlfaMalato) {
+//					this.alfaRelease();
+//				}
+//			}
+//		}	
+//	}
+	
+	private void updateNetwork() {
+		Iterable<RepastEdge<Object>> edges = this.network.getEdges(this);
+
+		for (RepastEdge<Object> edge : edges) {
+			// aggiunge dopamina
+			deadNetwork.addEdge(edge);
+			network.removeEdge(edge);
+		}
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+

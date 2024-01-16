@@ -12,7 +12,7 @@ public class MolMod {
 	private ContinuousSpace<Object> space;
 	private Grid<Object> grid;
 	private double angolo;
-	private boolean moved = false;
+	public boolean moved = false;
 	private GridPoint startAt;
 
 	public MolMod(ContinuousSpace<Object> space, Grid<Object> grid, GridPoint pt ) {
@@ -30,6 +30,5 @@ public class MolMod {
 		// muovo l'oggetto sempre lungo lo stesso angolo
 		this.space.moveByVector(this,1 , Math.toRadians(this.angolo), 0);
 		this.grid.moveByVector(this ,1,Math.toRadians(this.angolo) ,0);
-		
 	}
 }

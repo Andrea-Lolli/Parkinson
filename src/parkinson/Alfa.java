@@ -12,7 +12,7 @@ public class Alfa {
 	private Grid<Object> grid;
 	private GridPoint startAt;
 	private double angolo;
-	private boolean moved = false;
+	public boolean moved = false;
 	private int stepNumber = 0;
 	
 	public Alfa (ContinuousSpace<Object> space, Grid<Object> grid, GridPoint startAt , double angolo) {	
@@ -20,6 +20,11 @@ public class Alfa {
 		this.grid = grid;
 		this.startAt = startAt;
 		this.angolo = angolo;
+	}
+	
+	//Serve a rimuovere gli warn
+	public Alfa () {	
+
 	}
 	
 	public void build() {
@@ -34,7 +39,6 @@ public class Alfa {
 			return;
 		}
 		
-		this.moved = true;
 		this.stepNumber++;
 		int newX = startAt.getX() + getValueX();
 		int newY = startAt.getY() + getValueY();
@@ -42,6 +46,7 @@ public class Alfa {
 		this.grid.moveTo(this, newX, newY);
 		// muovo l'oggetto sempre lungo lo stesso angolo
 		this.startAt = new GridPoint(newX, newY);
+		//this.moved = true;
 	}
 	
 	private int getValueX() {
