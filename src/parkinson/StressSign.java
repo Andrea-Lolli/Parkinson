@@ -8,7 +8,6 @@ import repast.simphony.util.ContextUtils;
 
 public class StressSign {
 		
-	
 	private ContinuousSpace<Object> space;
 	private Grid<Object> grid;
 	private GridPoint startAt;

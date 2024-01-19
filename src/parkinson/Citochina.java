@@ -8,7 +8,6 @@ import repast.simphony.util.ContextUtils;
 
 public class Citochina {
 	
-	
 	private ContinuousSpace<Object> space;
 	private Grid<Object> grid;
 	private GridPoint startAt;
@@ -52,6 +51,7 @@ public class Citochina {
 		this.moved = true;
 	}
 	
+	// Si potrebbe fare un po' meglio...
 	private int getValueX() {
 		if(angolo == 0 || angolo == 45 || angolo == 315)
 			return 1;

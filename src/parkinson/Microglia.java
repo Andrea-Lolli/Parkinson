@@ -12,6 +12,7 @@ import repast.simphony.util.ContextUtils;
 
 public class Microglia {
 		
+	// TODO spostare in contextBuilder
 	// Parametri simulazione
 	private int probRilascio = 5;
 	private int soglia = 3;
@@ -35,7 +36,7 @@ public class Microglia {
 		this.stato = StatoInterno.inattivo;
 	}
 	
-	// una volta attivato il rilascio è periodico (????)
+	// una volta attivato il rilascio è periodico (?)
 	// UPDATED
 	@ScheduledMethod(start = 1, interval = 2)
 	public void releaseCito() {
@@ -51,6 +52,9 @@ public class Microglia {
 		}
 	}
 
+	/*
+	 * Assorbe alfa e si attiva
+	 */
 	@Watch ( watcheeClassName = "parkinson.Alfa",
 			 watcheeFieldNames = "moved",
 			 whenToTrigger = WatcherTriggerSchedule.LATER)
@@ -83,6 +87,9 @@ public class Microglia {
 		}
 	}
 	
+	/*
+	 * Assorbe stress e si attiva
+	 */
 	@Watch (watcheeClassName = "parkinson.StressSign",
 			watcheeFieldNames = "moved",
 			whenToTrigger = WatcherTriggerSchedule.LATER)
@@ -116,6 +123,9 @@ public class Microglia {
 		}
 	}
 	
+	/*
+	 * Assorbe MolMod e si disattiva
+	 */
 	@Watch (watcheeClassName = "parkinson.MolMod",
 			watcheeFieldNames = "moved",
 			whenToTrigger = WatcherTriggerSchedule.LATER)
@@ -151,8 +161,6 @@ public class Microglia {
     private static boolean isEuclideanDistanceLessThanReach(int x1, int y1, int x2, int y2) {
         // Calcola la distanza euclidea tra i due punti
         double distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-
-        // Verifica se la distanza è inferiore a 5
         return distance < reach;
     }
 }

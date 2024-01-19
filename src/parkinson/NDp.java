@@ -15,8 +15,9 @@ import repast.simphony.util.ContextUtils;
 
 public class NDp {
 	
-	// Parametri simulazione neurone
-	private int nAlfaAccumulo = 4;
+	// TODO spostare in contextBuilder
+	// Parametri simulazione 
+	private int nAlfaAccumulo = 4; // Soglie stati interni
 	private int nAlfaMalato = 12;
 	private int probAccumuloAlfa = 5; // (1/probAccumuloAlfa) = probabilità di incrementare alfasinucleina interna
 	private int probRilascio = 5; // (1/proRilascio) = probabilità di generare agenti in ognuna delle direzioni
@@ -33,10 +34,8 @@ public class NDp {
 
 	// descrive lo stato interno.
 	private StatoInterno stato;
-
-	//private List<Alfa> buffer;
 	private int contaAlfa;
-
+	
 	// contro le citochine
 	private int resistenza;
 
@@ -50,6 +49,7 @@ public class NDp {
 		this.deadNetwork = deadNetwork;
 	}
 
+	// Colori per display
 	public float getColorR() {
 		if(stato == StatoInterno.accumulo) 
 			return 160;
@@ -138,7 +138,7 @@ public class NDp {
 	}
 
 	/**
-	 * Rilascio alfa e passo allo stato malato.
+	 * Rilascio alfasinucleina quando muore il neurone
 	 */
 	@ScheduledMethod(start=1,interval = 1)
 	public void alfaRelease() {
@@ -160,6 +160,9 @@ public class NDp {
 		}
 	}
 
+	/**
+	 * Assorbe citochine che danneggiano il neurone
+	 */
 	@Watch (watcheeClassName = "parkinson.Citochina",
 			watcheeFieldNames = "moved",
 			whenToTrigger = WatcherTriggerSchedule.LATER)
@@ -193,66 +196,9 @@ public class NDp {
 		}
 	}
 	
-//	/**
-//	 * Controlla se sono presenti tra le celle vicine citochine
-//	 */
-//	@Watch (watcheeClassName = "parkinson.Citochina",
-//			watcheeFieldNames = "moved",
-//			query = "within_moore 1",
-//			whenToTrigger = WatcherTriggerSchedule.IMMEDIATE )
-//	public void checkCito() {
-//
-//		GridPoint pt = grid.getLocation(this);
-//		GridCellNgh<Citochina> n = new GridCellNgh<>(grid, pt, Citochina.class, 1,1);
-//
-//		List<GridCell<Citochina>> nn = n.getNeighborhood(true);
-//
-//		Context<Object> context = ContextUtils.getContext(true);
-//
-//
-//		for (GridCell<Citochina> gridCell : nn) {
-//			if(!gridCell.getPoint().equals(pt)) {
-//				Iterable<Citochina> iter = gridCell.items();
-//				for (Citochina c : iter) {	
-//					resistenza++;
-//					context.remove(c);
-//				}			
-//			}
-//
-//		}
-//		if(resistenza >= nAlfaMalato) {
-//			this.alfaRelease(); // sempre se è maggiore o uguale ad 8 altrimenti non rilascia
-//			resistenza = 0;
-//		}
-//
-//	}
-
-//	@Watch (watcheeClassName = "parkinson.Alfa",
-//			watcheeFieldNames = "moved",
-//			query = "within_moore 1",
-//			whenToTrigger = WatcherTriggerSchedule.IMMEDIATE )
-//	public void checkExAlfa() {
-//		GridPoint pt = grid.getLocation(this);
-//		GridCellNgh<Alfa> n = new GridCellNgh<Alfa>(grid, pt, Alfa.class, 1,1);
-//		List<GridCell<Alfa>> nn = n.getNeighborhood(true);
-//		Context<Object> context = ContextUtils.getContext(true);
-//		for (GridCell<Alfa> gridCell : nn) {
-//			if(!gridCell.getPoint().equals(pt)) {
-//				Iterable<Alfa> iter = gridCell.items();
-//				for (Alfa a : iter) {
-//					context.remove(a);
-//					this.contaAlfa++;				
-//				}
-//				if(this.contaAlfa >= nAlfaAccumulo) {		
-//					stato = StatoInterno.accumulo;
-//				}
-//				if(this.contaAlfa>= nAlfaMalato) {
-//					this.alfaRelease();
-//				}
-//			}
-//		}	
-//	}
-	
+	/**
+	 * Assorbe alfa vicina
+	 */
 	@Watch ( watcheeClassName = "parkinson.Alfa",
 			 watcheeFieldNames = "moved",
 			 whenToTrigger = WatcherTriggerSchedule.LATER)
@@ -292,11 +238,12 @@ public class NDp {
     private static boolean isEuclideanDistanceLessThanReach(int x1, int y1, int x2, int y2) {
         // Calcola la distanza euclidea tra i due punti
         double distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-
-        // Verifica se la distanza è inferiore a 5
         return distance < reach;
     }
 	
+    /**
+	 * Aggiorna la network quando il neurone muore
+	 */
 	private void updateNetwork() {
 		Iterable<RepastEdge<Object>> edges = this.network.getEdges(this);
 

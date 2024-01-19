@@ -47,6 +47,7 @@ public class Alfa {
 		this.moved = true;
 	}
 	
+	// Si potrebbe fare un po' meglio...
 	private int getValueX() {
 		if(angolo == 0 || angolo == 45 || angolo == 315)
 			return 1;

@@ -58,7 +58,7 @@ public class ParkBuilder implements ContextBuilder<Object> {
 			context.add(new NeuroneMotorio(space, grid, network, deadNetwork));
 		}
 		
-		
+		// Aggiungi agenti
 		for(int i = 0; i < neuronDcount; i++) {
 			NDp neuron = new NDp(space, grid, network, deadNetwork);
 			context.add(neuron);
@@ -72,7 +72,6 @@ public class ParkBuilder implements ContextBuilder<Object> {
 		for(int i = 0; i < microgliaCount; i++) {
 			context.add(new Microglia(space, grid));
 		}
-
 		
 		// Calcolo posizioni ambiente
         double[][] neuronPoints = generatePoints(neuronDcount + neuronCcount, dimX, neuronMaxDistance);

@@ -22,13 +22,10 @@ public class NeuroneMotorio {
 
 	// descrive lo stato interno.
 	private StatoInterno stato;
-
 	private int contaDop;
-	private boolean deficit;
 
 	public NeuroneMotorio (ContinuousSpace<Object> space, Grid<Object> grid, Network<Object> network, Network<Object> deadNetwork) {
 		this.contaDop = 10;
-		this.deficit = true;
 		this.space = space;
 		this.grid = grid;
 		this.network = network;
@@ -51,7 +48,6 @@ public class NeuroneMotorio {
 	}
 
 	public void addDop() {
-		deficit = false;
 		contaDop++;
 	}
 
