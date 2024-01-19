@@ -1,14 +1,13 @@
 package parkinson;
 
-import java.util.Comparator;
-import java.util.Random;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 
 import repast.simphony.context.Context;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactory;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactoryFinder;
-import repast.simphony.context.space.graph.NetworkBuilder;
 import repast.simphony.context.space.graph.NetworkFactory;
 import repast.simphony.context.space.graph.NetworkFactoryFinder;
 import repast.simphony.context.space.grid.GridFactory;
@@ -34,7 +33,7 @@ public class ParkBuilder implements ContextBuilder<Object> {
 	private int microgliaCount = 100;
 	private int astrociteCount = 100;
 	// Distanza agenti
-	private int connectionDistance = 9; // per network neuroni
+	private int connectionDistance = 13; 
 	private int neuronMaxDistance = 3;
 	private int agentMaxDistance = 3;
 	
@@ -76,8 +75,8 @@ public class ParkBuilder implements ContextBuilder<Object> {
 
 		
 		// Calcolo posizioni ambiente
-        double[][] neuronPoints = generatePoints(neuronDcount + neuronCcount, dimX-2, neuronMaxDistance);
-        double[][] otherAgentsPoints = generatePoints(microgliaCount + astrociteCount, dimX-2, agentMaxDistance);
+        double[][] neuronPoints = generatePoints(neuronDcount + neuronCcount, dimX, neuronMaxDistance);
+        double[][] otherAgentsPoints = generatePoints(microgliaCount + astrociteCount, dimX, agentMaxDistance);
         
         int neuronCount = 0;
         int agentCount = 0;
@@ -85,12 +84,12 @@ public class ParkBuilder implements ContextBuilder<Object> {
         // Posiziona agenti
 		for(Object obj : context) {
 			if(isNeuron(obj)) {
-				grid.moveTo(obj, (int) neuronPoints[neuronCount][0]+1, (int) neuronPoints[neuronCount][1]+1);
-				space.moveTo(obj, neuronPoints[neuronCount][0]+1, neuronPoints[neuronCount][1]+1);
+				grid.moveTo(obj, (int) neuronPoints[neuronCount][0], (int) neuronPoints[neuronCount][1]);
+				space.moveTo(obj, neuronPoints[neuronCount][0], neuronPoints[neuronCount][1]);
 				neuronCount++;
 			} else {
-				grid.moveTo(obj, (int) otherAgentsPoints[agentCount][0]+1, (int) otherAgentsPoints[agentCount][1]+1);
-				space.moveTo(obj, otherAgentsPoints[agentCount][0]+1, otherAgentsPoints[agentCount][1]+1);
+				grid.moveTo(obj, (int) otherAgentsPoints[agentCount][0], (int) otherAgentsPoints[agentCount][1]);
+				space.moveTo(obj, otherAgentsPoints[agentCount][0], otherAgentsPoints[agentCount][1]);
 				agentCount++;
 			}
 		}

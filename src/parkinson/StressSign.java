@@ -16,7 +16,6 @@ public class StressSign {
 	private double angolo;
 	public boolean moved = false;
 	private int stepNumber = 0;
-	private boolean settedUp = false;
 	
 	public StressSign (ContinuousSpace<Object> space, Grid<Object> grid, GridPoint pt, double angolo) {	
 		this.space = space;
@@ -28,7 +27,6 @@ public class StressSign {
 	public void build() {
 		this.space.moveTo(this, startAt.getX(), startAt.getY());
 		this.grid.moveTo(this, startAt.getX(), startAt.getY());
-		settedUp = true;
 	}
 	
 	public GridPoint getPosition() {
@@ -37,15 +35,8 @@ public class StressSign {
 	
 	@ScheduledMethod(start = 2, interval=1)
 	public void move() {
-		if(!settedUp)
-			return;
-		
 		if(stepNumber == 5) {
-			try {
-				ContextUtils.getContext(this).remove(this);
-			} catch(Exception e) {
-				System.out.println("aaaaaaaa" + e.getMessage());
-			}
+			ContextUtils.getContext(this).remove(this);
 			return;
 		}
 		

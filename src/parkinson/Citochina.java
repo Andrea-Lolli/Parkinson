@@ -2,7 +2,6 @@ package parkinson;
 
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.space.continuous.ContinuousSpace;
-import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
 import repast.simphony.util.ContextUtils;
@@ -15,7 +14,7 @@ public class Citochina {
 	private GridPoint startAt;
 	
 	private double angolo;
-	public boolean moved= false;
+	public boolean moved = false;
 	private int stepNumber = 0;
 	
 	public Citochina (ContinuousSpace<Object> space, Grid<Object> grid, GridPoint startAt, double angolo) {	
@@ -28,6 +27,10 @@ public class Citochina {
 	public void build() {
 		this.space.moveTo(this, startAt.getX(), startAt.getY());
 		this.grid.moveTo(this, startAt.getX(), startAt.getY());
+	}
+	
+	public GridPoint getPosition() {
+		return startAt;
 	}
 	
 	@ScheduledMethod(start = 1, interval=1)
@@ -46,6 +49,7 @@ public class Citochina {
 		this.grid.moveTo(this, newX, newY);
 		// muovo l'oggetto sempre lungo lo stesso angolo
 		this.startAt = new GridPoint(newX, newY);
+		this.moved = true;
 	}
 	
 	private int getValueX() {

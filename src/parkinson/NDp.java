@@ -1,27 +1,17 @@
 package parkinson;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Random;
+
 import repast.simphony.context.Context;
-import repast.simphony.context.Contexts;
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.engine.watcher.Watch;
 import repast.simphony.engine.watcher.WatcherTriggerSchedule;
-import repast.simphony.query.space.grid.GridCellNgh;
-import repast.simphony.random.RandomHelper;
 import repast.simphony.space.continuous.ContinuousSpace;
-import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.graph.Network;
 import repast.simphony.space.graph.RepastEdge;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
 import repast.simphony.util.ContextUtils;
-import repast.simphony.util.SimUtilities;
-import repast.simphony.query.space.grid.GridCell;
 
 public class NDp {
 	
@@ -30,6 +20,7 @@ public class NDp {
 	private int nAlfaMalato = 12;
 	private int probAccumuloAlfa = 5; // (1/probAccumuloAlfa) = probabilità di incrementare alfasinucleina interna
 	private int probRilascio = 5; // (1/proRilascio) = probabilità di generare agenti in ognuna delle direzioni
+	private static int reach = 5; // raggio percezione
 	
 	public enum StatoInterno{
 		produzione, accumulo, malato;
@@ -169,7 +160,39 @@ public class NDp {
 		}
 	}
 
-
+	@Watch (watcheeClassName = "parkinson.Citochina",
+			watcheeFieldNames = "moved",
+			whenToTrigger = WatcherTriggerSchedule.LATER)
+	public void checkCito(Citochina agent) {
+		//System.out.println("se movee");
+		GridPoint agentPos = agent.getPosition();
+		
+		int x = agentPos.getX();
+		int y = agentPos.getY();
+		
+		Context<Object> context = ContextUtils.getContext(this);
+		
+		if(context != null) {
+			GridPoint pos = grid.getLocation(this);
+			if(pos != null) {
+				int x1 = pos.getX();
+				int y1 = pos.getY();
+				if(isEuclideanDistanceLessThanReach(x,y,x1,y1)) {
+					if(stato!=StatoInterno.malato) {
+						context.remove(agent);
+						resistenza++;
+						if(resistenza >= nAlfaMalato) {
+							this.stato = StatoInterno.malato;
+							updateNetwork();
+							this.alfaRelease(); // sempre se è maggiore o uguale ad 8 altrimenti non rilascia
+							resistenza = 0;
+						}
+					}
+				}	
+			}
+		}
+	}
+	
 //	/**
 //	 * Controlla se sono presenti tra le celle vicine citochine
 //	 */
@@ -229,6 +252,50 @@ public class NDp {
 //			}
 //		}	
 //	}
+	
+	@Watch ( watcheeClassName = "parkinson.Alfa",
+			 watcheeFieldNames = "moved",
+			 whenToTrigger = WatcherTriggerSchedule.LATER)
+	public void checkAlfa(Alfa agent) {
+		GridPoint agentPos = agent.getPosition();
+		
+		int x = agentPos.getX();
+		int y = agentPos.getY();
+		
+		Context<Object> context = ContextUtils.getContext(this);
+		
+		if(context != null) {
+			GridPoint pos = grid.getLocation(this);
+			if(pos != null) {
+				int x1 = pos.getX();
+				int y1 = pos.getY();
+				if(isEuclideanDistanceLessThanReach(x,y,x1,y1)) {
+					if(stato!=StatoInterno.malato) {
+						//System.out.println("c'è della alfaa vicino a me!!!");
+						context.remove(agent);
+						contaAlfa++;
+						
+						if(this.contaAlfa >= nAlfaAccumulo) {		
+							stato = StatoInterno.accumulo;
+						}
+						if(this.contaAlfa>= nAlfaMalato) {
+							this.alfaRelease();
+							this.stato = StatoInterno.malato;
+							updateNetwork();
+						}
+					}
+				}	
+			}
+		}
+	}
+	
+    private static boolean isEuclideanDistanceLessThanReach(int x1, int y1, int x2, int y2) {
+        // Calcola la distanza euclidea tra i due punti
+        double distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+
+        // Verifica se la distanza è inferiore a 5
+        return distance < reach;
+    }
 	
 	private void updateNetwork() {
 		Iterable<RepastEdge<Object>> edges = this.network.getEdges(this);

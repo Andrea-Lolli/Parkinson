@@ -22,14 +22,13 @@ public class Alfa {
 		this.angolo = angolo;
 	}
 	
-	//Serve a rimuovere gli warn
-	public Alfa () {	
-
-	}
-	
 	public void build() {
 		this.space.moveTo(this, startAt.getX(), startAt.getY());
 		this.grid.moveTo(this, startAt.getX(), startAt.getY());
+	}
+	
+	public GridPoint getPosition() {
+		return startAt;
 	}
 	
 	@ScheduledMethod(start = 1, interval = 1)
@@ -44,9 +43,8 @@ public class Alfa {
 		int newY = startAt.getY() + getValueY();
 		this.space.moveTo(this, newX, newY);
 		this.grid.moveTo(this, newX, newY);
-		// muovo l'oggetto sempre lungo lo stesso angolo
 		this.startAt = new GridPoint(newX, newY);
-		//this.moved = true;
+		this.moved = true;
 	}
 	
 	private int getValueX() {
